@@ -13,6 +13,10 @@ export const MODEL_CATALOG: ModelConfig[] = [
   { alias: 'deepseek', name: 'ollama/deepseek-r1:14b', provider: 'ollama', description: 'Local reasoning (free)', costPer1k: 0.0 },
   { alias: 'groq-fast', name: 'groq/llama-3.1-8b-instant', provider: 'groq', description: '840 tok/s, ultra fast', costPer1k: 0.05 },
   { alias: 'groq', name: 'groq/llama-3.3-70b-versatile', provider: 'groq', description: 'Fast + quality balance', costPer1k: 0.59 },
+  { alias: 'nvidia-405b', name: 'meta/llama-3.1-405b-instruct', provider: 'nvidia', description: 'NVIDIA NIM flagship', costPer1k: 1.0 },
+  { alias: 'nvidia-70b', name: 'meta/llama-3.3-70b-instruct', provider: 'nvidia', description: 'NVIDIA NIM versatile', costPer1k: 0.6 },
+  { alias: 'nemotron', name: 'nvidia/llama-3.1-nemotron-70b-instruct', provider: 'nvidia', description: 'NVIDIA specialized model', costPer1k: 0.6 },
+  { alias: 'glm5', name: 'z-ai/glm5', provider: 'nvidia', description: 'GLM-5 thinking model via NVIDIA NIM', costPer1k: 0.1 },
   { alias: 'kimi', name: 'moonshot/kimi-k2.5', provider: 'moonshot', description: 'Alternative provider', costPer1k: 1.0 },
   { alias: 'minimax', name: 'minimax/minimax-m2.1', provider: 'minimax', description: 'Cost-effective (1/10th price), strong coding', costPer1k: 0.3 },
 ]
