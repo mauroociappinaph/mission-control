@@ -1,4 +1,4 @@
-'use client'
+ 'use client'
 
 import { useCallback, useRef, useEffect } from 'react'
 import { useMissionControl } from '@/store'
@@ -13,7 +13,7 @@ import { APP_VERSION } from '@/lib/version'
 
 // Gateway protocol version (v3 required by OpenClaw 2026.x)
 const PROTOCOL_VERSION = 3
-const DEFAULT_GATEWAY_CLIENT_ID = process.env.NEXT_PUBLIC_GATEWAY_CLIENT_ID || 'claw'
+const DEFAULT_GATEWAY_CLIENT_ID = process.env.NEXT_PUBLIC_GATEWAY_CLIENT_ID || 'openclaw'
 
 // Heartbeat configuration
 const PING_INTERVAL_MS = 30_000
