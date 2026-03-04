@@ -194,31 +194,15 @@ async function getSystemStatus(workspaceId: number) {
   }
 
   try {
-    // System uptime
-    const { stdout: uptimeOutput } = await runCommand('uptime', ['-s'], {
-      timeoutMs: 3000
-    })
-    const bootTime = new Date(uptimeOutput.trim())
-    status.uptime = Date.now() - bootTime.getTime()
+    // System uptime - cross-platform
+    status.uptime = await getSystemUptime()
   } catch (error) {
     logger.error({ err: error }, 'Error getting uptime')
   }
 
   try {
-    // Memory info
-    const { stdout: memOutput } = await runCommand('free', ['-m'], {
-      timeoutMs: 3000
-    })
-    const memLines = memOutput.split('\n')
-    const memLine = memLines.find(line => line.startsWith('Mem:'))
-    if (memLine) {
-      const parts = memLine.split(/\s+/)
-      status.memory = {
-        total: parseInt(parts[1]) || 0,
-        used: parseInt(parts[2]) || 0,
-        available: parseInt(parts[6]) || 0
-      }
-    }
+    // Memory info - cross-platform
+    status.memory = await getSystemMemory()
   } catch (error) {
     logger.error({ err: error }, 'Error getting memory info')
   }
@@ -421,7 +405,7 @@ async function performHealthCheck() {
     const lines = stdout.trim().split('\n')
     const last = lines[lines.length - 1] || ''
     const usagePercent = parseInt(last.replace('%', '').trim() || '0')
-    
+
     health.checks.push({
       name: 'Disk Space',
       status: usagePercent < 90 ? 'healthy' : usagePercent < 95 ? 'warning' : 'critical',
@@ -437,13 +421,8 @@ async function performHealthCheck() {
 
   // Check memory usage
   try {
-    const { stdout } = await runCommand('free', ['-m'], { timeoutMs: 3000 })
-    const lines = stdout.split('\n')
-    const memLine = lines.find((line) => line.startsWith('Mem:'))
-    const parts = (memLine || '').split(/\s+/)
-    const total = parseInt(parts[1] || '0')
-    const available = parseInt(parts[6] || '0')
-    const usagePercent = Math.round(((total - available) / total) * 100)
+    const memory = await getSystemMemory()
+    const usagePercent = Math.round(((memory.used) / memory.total) * 100)
 
     health.checks.push({
       name: 'Memory Usage',
@@ -510,6 +489,85 @@ async function getCapabilities() {
   }
 
   return { gateway, openclawHome, claudeHome, claudeSessions, subscription }
+}
+
+/**
+ * Get system uptime in milliseconds - cross-platform
+ * Linux: uses `uptime -s`
+ * macOS: uses `sysctl -n kern.boottime`
+ */
+async function getSystemUptime(): Promise<number> {
+  const platform = process.platform
+
+  if (platform === 'darwin') {
+    // macOS: use sysctl to get boot time
+    const { stdout } = await runCommand('sysctl', ['-n', 'kern.boottime'], { timeoutMs: 3000 })
+    // Parse: { sec = 1234567890, usec = 123456 }
+    const match = stdout.match(/sec = (\d+)/)
+    if (match) {
+      const bootTime = parseInt(match[1]) * 1000
+      return Date.now() - bootTime
+    }
+    throw new Error('Could not parse boot time')
+  } else {
+    // Linux: use uptime -s
+    const { stdout } = await runCommand('uptime', ['-s'], { timeoutMs: 3000 })
+    const bootTime = new Date(stdout.trim())
+    return Date.now() - bootTime.getTime()
+  }
+}
+
+/**
+ * Get system memory info in MB - cross-platform
+ * Linux: uses `free -m`
+ * macOS: uses `vm_stat` and `sysctl`
+ */
+async function getSystemMemory(): Promise<{ total: number; used: number; available: number }> {
+  const platform = process.platform
+
+  if (platform === 'darwin') {
+    // macOS: use vm_stat and sysctl
+    const [{ stdout: vmStat }, { stdout: hwMemsize }] = await Promise.all([
+      runCommand('vm_stat', [], { timeoutMs: 3000 }),
+      runCommand('sysctl', ['-n', 'hw.memsize'], { timeoutMs: 3000 })
+    ])
+
+    // Parse page size (usually 4096 on macOS)
+    const pageSizeMatch = vmStat.match(/page size of (\d+) bytes/)
+    const pageSize = pageSizeMatch ? parseInt(pageSizeMatch[1]) : 4096
+
+    // Parse memory stats
+    const freePages = parseInt(vmStat.match(/Pages free:\s+(\d+)/)?.[1] || '0')
+    const activePages = parseInt(vmStat.match(/Pages active:\s+(\d+)/)?.[1] || '0')
+    const inactivePages = parseInt(vmStat.match(/Pages inactive:\s+(\d+)/)?.[1] || '0')
+    const speculativePages = parseInt(vmStat.match(/Pages speculative:\s+(\d+)/)?.[1] || '0')
+    const wiredPages = parseInt(vmStat.match(/Pages wired down:\s+(\d+)/)?.[1] || '0')
+
+    const totalBytes = parseInt(hwMemsize.trim())
+    const total = Math.floor(totalBytes / 1024 / 1024)
+
+    const usedBytes = (activePages + inactivePages + speculativePages + wiredPages) * pageSize
+    const used = Math.floor(usedBytes / 1024 / 1024)
+
+    const freeBytes = freePages * pageSize
+    const available = Math.floor(freeBytes / 1024 / 1024)
+
+    return { total, used, available }
+  } else {
+    // Linux: use free -m
+    const { stdout } = await runCommand('free', ['-m'], { timeoutMs: 3000 })
+    const lines = stdout.split('\n')
+    const memLine = lines.find(line => line.startsWith('Mem:'))
+    if (memLine) {
+      const parts = memLine.split(/\s+/)
+      return {
+        total: parseInt(parts[1]) || 0,
+        used: parseInt(parts[2]) || 0,
+        available: parseInt(parts[6]) || 0
+      }
+    }
+    throw new Error('Could not parse memory info')
+  }
 }
 
 function isPortOpen(host: string, port: number): Promise<boolean> {
