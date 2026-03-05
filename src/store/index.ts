@@ -620,12 +620,24 @@ export const useMissionControl = create<MissionControlStore>()(
     // Mission Control Phase 2 - Tasks
     tasks: [],
     selectedTask: null,
-    setTasks: (tasks) => set({ tasks }),
+    setTasks: (tasks) => 
+      set((state) => {
+        const seen = new Set()
+        const unique = tasks.filter(t => {
+          if (seen.has(t.id)) return false
+          seen.add(t.id)
+          return true
+        })
+        return { tasks: unique }
+      }),
     setSelectedTask: (task) => set({ selectedTask: task }),
     addTask: (task) =>
-      set((state) => ({
-        tasks: [task, ...state.tasks]
-      })),
+      set((state) => {
+        if (state.tasks.some(t => t.id === task.id)) return state
+        return {
+          tasks: [task, ...state.tasks]
+        }
+      }),
     updateTask: (taskId, updates) =>
       set((state) => ({
         tasks: state.tasks.map((task) =>
@@ -644,12 +656,24 @@ export const useMissionControl = create<MissionControlStore>()(
     // Mission Control Phase 2 - Agents
     agents: [],
     selectedAgent: null,
-    setAgents: (agents) => set({ agents }),
+    setAgents: (agents) => 
+      set((state) => {
+        const seen = new Set()
+        const unique = agents.filter(a => {
+          if (seen.has(a.id)) return false
+          seen.add(a.id)
+          return true
+        })
+        return { agents: unique }
+      }),
     setSelectedAgent: (agent) => set({ selectedAgent: agent }),
     addAgent: (agent) =>
-      set((state) => ({
-        agents: [agent, ...state.agents]
-      })),
+      set((state) => {
+        if (state.agents.some(a => a.id === agent.id)) return state
+        return {
+          agents: [agent, ...state.agents]
+        }
+      }),
     updateAgent: (agentId, updates) =>
       set((state) => ({
         agents: state.agents.map((agent) =>
@@ -667,25 +691,49 @@ export const useMissionControl = create<MissionControlStore>()(
 
     // Mission Control Phase 2 - Activities
     activities: [],
-    setActivities: (activities) => set({ activities }),
+    setActivities: (activities) => 
+      set((state) => {
+        const seen = new Set()
+        const unique = activities.filter(a => {
+          if (seen.has(a.id)) return false
+          seen.add(a.id)
+          return true
+        })
+        return { activities: unique }
+      }),
     addActivity: (activity) =>
-      set((state) => ({
-        activities: [activity, ...state.activities].slice(0, 1000) // Keep last 1000
-      })),
+      set((state) => {
+        // Deduplicate to prevent duplicate key errors
+        if (state.activities.some(a => a.id === activity.id)) return state
+        return {
+          activities: [activity, ...state.activities].slice(0, 1000) // Keep last 1000
+        }
+      }),
 
     // Mission Control Phase 2 - Notifications
     notifications: [],
     unreadNotificationCount: 0,
     setNotifications: (notifications) =>
       set({
-        notifications,
+        notifications: (() => {
+          const seen = new Set()
+          return notifications.filter(n => {
+            if (seen.has(n.id)) return false
+            seen.add(n.id)
+            return true
+          })
+        })(),
         unreadNotificationCount: notifications.filter(n => !n.read_at).length
       }),
     addNotification: (notification) =>
-      set((state) => ({
-        notifications: [notification, ...state.notifications],
-        unreadNotificationCount: state.unreadNotificationCount + 1
-      })),
+      set((state) => {
+        // Deduplicate to prevent duplicate key errors
+        if (state.notifications.some(n => n.id === notification.id)) return state
+        return {
+          notifications: [notification, ...state.notifications],
+          unreadNotificationCount: state.unreadNotificationCount + 1
+        }
+      }),
     markNotificationRead: (notificationId) =>
       set((state) => ({
         notifications: state.notifications.map((notification) =>
@@ -724,7 +772,17 @@ export const useMissionControl = create<MissionControlStore>()(
     chatInput: '',
     isSendingMessage: false,
     chatPanelOpen: false,
-    setChatMessages: (messages) => set({ chatMessages: messages.slice(-500) }),
+    setChatMessages: (messages) => 
+      set((state) => {
+        // Deduplicate by ID to prevent duplicate key errors
+        const seen = new Set()
+        const uniqueMessages = messages.filter(m => {
+          if (seen.has(m.id)) return false
+          seen.add(m.id)
+          return true
+        })
+        return { chatMessages: uniqueMessages.slice(-500) }
+      }),
     addChatMessage: (message) =>
       set((state) => {
         // Deduplicate: skip if a message with the same server ID already exists
@@ -740,11 +798,21 @@ export const useMissionControl = create<MissionControlStore>()(
         return { chatMessages: messages, conversations }
       }),
     replacePendingMessage: (tempId, message) =>
-      set((state) => ({
-        chatMessages: state.chatMessages.map(m =>
-          m.id === tempId ? { ...message, pendingStatus: 'sent' } : m
-        ),
-      })),
+      set((state) => {
+        // If the message already exists (e.g. added via SSE), just remove the temp message
+        const alreadyExists = state.chatMessages.some(m => m.id === message.id)
+        if (alreadyExists) {
+          return {
+            chatMessages: state.chatMessages.filter(m => m.id !== tempId)
+          }
+        }
+        
+        return {
+          chatMessages: state.chatMessages.map(m =>
+            m.id === tempId ? { ...message, pendingStatus: 'sent' } : m
+          ),
+        }
+      }),
     updatePendingMessage: (tempId, updates) =>
       set((state) => ({
         chatMessages: state.chatMessages.map(m =>
@@ -755,7 +823,16 @@ export const useMissionControl = create<MissionControlStore>()(
       set((state) => ({
         chatMessages: state.chatMessages.filter(m => m.id !== tempId),
       })),
-    setConversations: (conversations) => set({ conversations }),
+    setConversations: (conversations) => 
+      set((state) => {
+        const seen = new Set()
+        const unique = conversations.filter(c => {
+          if (seen.has(c.id)) return false
+          seen.add(c.id)
+          return true
+        })
+        return { conversations: unique }
+      }),
     setActiveConversation: (conversationId) => set({ activeConversation: conversationId }),
     setChatInput: (input) => set({ chatInput: input }),
     setIsSendingMessage: (loading) => set({ isSendingMessage: loading }),

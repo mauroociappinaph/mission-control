@@ -505,12 +505,21 @@ export function useWebSocket() {
     manualDisconnectRef.current = false
     nonRetryableErrorRef.current = null
 
+    // Ensure URL has required query params for gateway handshake
+    const wsUrlObj = new URL(url, window.location.origin)
+    if (!wsUrlObj.searchParams.has('client[id]')) {
+      wsUrlObj.searchParams.set('client[id]', DEFAULT_GATEWAY_CLIENT_ID)
+    }
+    if (authTokenRef.current && !wsUrlObj.searchParams.has('token')) {
+      wsUrlObj.searchParams.set('token', authTokenRef.current)
+    }
+
     try {
-      const ws = new WebSocket(url.split('?')[0]) // Connect without query params
+      const ws = new WebSocket(wsUrlObj.toString())
       wsRef.current = ws
 
       ws.onopen = () => {
-        console.log('WebSocket connected to', url.split('?')[0])
+        console.log('WebSocket connected to', wsUrlObj.toString())
         // Don't set isConnected yet - wait for handshake
         setConnection({
           url: url.split('?')[0],
