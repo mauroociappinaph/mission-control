@@ -26,6 +26,20 @@ interface ClaudeStats {
   unique_projects: number
 }
 
+import { 
+  SessionIcon, 
+  AgentIcon, 
+  TaskIcon, 
+  ErrorIcon, 
+  SpawnIcon, 
+  LogIcon, 
+  MemoryIcon, 
+  PipelineIcon, 
+  ProjectIcon, 
+  TokenIcon, 
+  CostIcon 
+} from '@/components/ui/icons'
+
 export function Dashboard() {
   const {
     sessions,
@@ -514,15 +528,15 @@ export function Dashboard() {
       {/* Quick Actions */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
         {!isLocal && (
-          <QuickAction label="Spawn Agent" desc="Launch sub-agent" tab="spawn" icon={<SpawnActionIcon />} onNavigate={navigateToPanel} />
+          <QuickAction label="Spawn Agent" desc="Launch sub-agent" tab="spawn" icon={<SpawnIcon />} onNavigate={navigateToPanel} />
         )}
-        <QuickAction label="View Logs" desc="Real-time viewer" tab="logs" icon={<LogActionIcon />} onNavigate={navigateToPanel} />
-        <QuickAction label="Task Board" desc="Kanban view" tab="tasks" icon={<TaskActionIcon />} onNavigate={navigateToPanel} />
-        <QuickAction label="Memory" desc="Knowledge base" tab="memory" icon={<MemoryActionIcon />} onNavigate={navigateToPanel} />
+        <QuickAction label="View Logs" desc="Real-time viewer" tab="logs" icon={<LogIcon />} onNavigate={navigateToPanel} />
+        <QuickAction label="Task Board" desc="Kanban view" tab="tasks" icon={<TaskIcon />} onNavigate={navigateToPanel} />
+        <QuickAction label="Memory" desc="Knowledge base" tab="memory" icon={<MemoryIcon />} onNavigate={navigateToPanel} />
         {isLocal ? (
           <QuickAction label="Sessions" desc="Claude Code sessions" tab="sessions" icon={<SessionIcon />} onNavigate={navigateToPanel} />
         ) : (
-          <QuickAction label="Orchestration" desc="Workflows & pipelines" tab="orchestration" icon={<PipelineActionIcon />} onNavigate={navigateToPanel} />
+          <QuickAction label="Orchestration" desc="Workflows & pipelines" tab="orchestration" icon={<PipelineIcon />} onNavigate={navigateToPanel} />
         )}
       </div>
     </div>
@@ -691,103 +705,4 @@ function taskStatusColor(status: string): string {
     case 'inbox': return 'bg-muted-foreground/40'
     default: return 'bg-muted-foreground/30'
   }
-}
-
-// --- Mini SVG Icons ---
-
-function SessionIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <path d="M2 3h12v9H2zM5 12v2M11 12v2M4 14h8" />
-    </svg>
-  )
-}
-function AgentIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <circle cx="8" cy="5" r="3" />
-      <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" />
-    </svg>
-  )
-}
-function TaskIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <rect x="2" y="1" width="12" height="14" rx="1.5" />
-      <path d="M5 5h6M5 8h6M5 11h3" />
-    </svg>
-  )
-}
-function ErrorIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <path d="M8 1l7 13H1L8 1zM8 6v3M8 11.5v.5" />
-    </svg>
-  )
-}
-function SpawnActionIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <path d="M8 2v12M8 2l-3 3M8 2l3 3" />
-    </svg>
-  )
-}
-function LogActionIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" />
-      <path d="M5 5h6M5 8h6M5 11h3" />
-    </svg>
-  )
-}
-function TaskActionIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <rect x="2" y="1" width="12" height="14" rx="1.5" />
-      <path d="M5 5l2 2 3-3" />
-      <path d="M5 10h6" />
-    </svg>
-  )
-}
-function MemoryActionIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <ellipse cx="8" cy="8" rx="6" ry="3" />
-      <path d="M2 8v3c0 1.7 2.7 3 6 3s6-1.3 6-3V8" />
-    </svg>
-  )
-}
-function PipelineActionIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <circle cx="3" cy="8" r="2" />
-      <circle cx="13" cy="4" r="2" />
-      <circle cx="13" cy="12" r="2" />
-      <path d="M5 7l6-2M5 9l6 2" />
-    </svg>
-  )
-}
-function ProjectIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <path d="M2 4l6-2 6 2v8l-6 2-6-2V4z" />
-      <path d="M8 6v8M2 4l6 2 6-2" />
-    </svg>
-  )
-}
-function TokenIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <circle cx="8" cy="8" r="6" />
-      <path d="M8 4v8M5 6h6M5 10h6" />
-    </svg>
-  )
-}
-function CostIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <circle cx="8" cy="8" r="6" />
-      <path d="M8 3.5V5M8 11v1.5M10.5 6.5C10.5 5.4 9.4 4.5 8 4.5S5.5 5.4 5.5 6.5c0 1.1 1.1 2 2.5 2s2.5.9 2.5 2c0 1.1-1.1 2-2.5 2s-2.5-.9-2.5-2" />
-    </svg>
-  )
 }

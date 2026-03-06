@@ -1,6 +1,7 @@
 'use client'
 
 import { useMissionControl } from '@/store'
+import { getStatusStyles } from '@/lib/utils'
 
 interface ConnectionStatusProps {
   isConnected: boolean
@@ -18,19 +19,14 @@ export function ConnectionStatus({
   const { connection } = useMissionControl()
   const displayUrl = connection.url || 'ws://<gateway-host>:<gateway-port>'
 
-  const getStatusColor = () => {
-    if (isConnected) return 'bg-green-500 animate-pulse'
-    if (connection.reconnectAttempts > 0) return 'bg-yellow-500'
-    return 'bg-red-500'
-  }
+  const styles = getStatusStyles(
+    isConnected ? 'active' : 
+    connection.reconnectAttempts > 0 ? 'warning' : 'offline'
+  )
 
   const getStatusText = () => {
-    if (isConnected) {
-      return 'Connected'
-    }
-    if (connection.reconnectAttempts > 0) {
-      return `Reconnecting... (${connection.reconnectAttempts}/10)`
-    }
+    if (isConnected) return 'Connected'
+    if (connection.reconnectAttempts > 0) return `Reconnecting... (${connection.reconnectAttempts}/10)`
     return 'Disconnected'
   }
 
@@ -38,7 +34,7 @@ export function ConnectionStatus({
     <div className="flex items-center space-x-4">
       {/* Connection Status Indicator */}
       <div className="flex items-center space-x-2">
-        <div className={`w-3 h-3 rounded-full ${getStatusColor()}`}></div>
+        <div className={`w-3 h-3 rounded-full ${styles.dot} ${isConnected ? 'animate-pulse' : ''}`}></div>
         <span className="text-sm font-medium">
           {getStatusText()}
         </span>

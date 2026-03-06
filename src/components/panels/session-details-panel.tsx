@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { useMissionControl } from '@/store'
 import { useSmartPoll } from '@/lib/use-smart-poll'
+import { parseTokenUsage, getStatusStyles, getSessionTypeIcon, getSessionType } from '@/lib/utils'
 
 export function SessionDetailsPanel() {
   const { 
@@ -43,60 +44,12 @@ export function SessionDetailsPanel() {
     ) || { alias: modelName, name: modelName, provider: 'unknown', description: 'Unknown model' }
   }
 
-  const parseTokenUsage = (tokenString: string) => {
-    // Parse token strings like "49k/35k (139%)" or "15k/35k (43%)"
-    const match = tokenString.match(/(\d+(?:\.\d+)?)(k|m)?\/(\d+(?:\.\d+)?)(k|m)?\s*\((\d+(?:\.\d+)?)%\)/)
-    if (!match) return { used: 0, total: 0, percentage: 0 }
-
-    const used = parseFloat(match[1]) * (match[2] === 'k' ? 1000 : match[2] === 'm' ? 1000000 : 1)
-    const total = parseFloat(match[3]) * (match[4] === 'k' ? 1000 : match[4] === 'm' ? 1000000 : 1)
-    const percentage = parseFloat(match[5])
-
-    return { used, total, percentage }
-  }
-
-  const getSessionTypeIcon = (sessionKey: string) => {
-    if (sessionKey.includes(':main:main')) return '👑' // Main session
-    if (sessionKey.includes(':subagent:')) return '🤖' // Sub-agent
-    if (sessionKey.includes(':cron:')) return '⏰' // Cron job
-    if (sessionKey.includes(':group:')) return '👥' // Group session
-    return '💬' // Default
-  }
-
-  const getSessionType = (sessionKey: string) => {
-    if (sessionKey.includes(':main:main')) return 'Main'
-    if (sessionKey.includes(':subagent:')) return 'Sub-agent'
-    if (sessionKey.includes(':cron:')) return 'Cron'
-    if (sessionKey.includes(':group:')) return 'Group'
-    return 'Unknown'
-  }
-
   const getSessionStatus = (session: any) => {
     if (!session.active) return 'idle'
     const tokenUsage = parseTokenUsage(session.tokens)
     if (tokenUsage.percentage > 95) return 'critical'
     if (tokenUsage.percentage > 80) return 'warning'
     return 'active'
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'text-green-400'
-      case 'warning': return 'text-yellow-400'
-      case 'critical': return 'text-red-400'
-      case 'idle': return 'text-muted-foreground'
-      default: return 'text-muted-foreground'
-    }
-  }
-
-  const getStatusBg = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-500/20'
-      case 'warning': return 'bg-yellow-500/20'
-      case 'critical': return 'bg-red-500/20'
-      case 'idle': return 'bg-gray-500/20'
-      default: return 'bg-secondary'
-    }
   }
 
   const filteredSessions = sessions.filter(session => {
@@ -224,7 +177,7 @@ export function SessionDetailsPanel() {
                             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                               <span>{getSessionType(session.key)}</span>
                               <span>•</span>
-                              <span className={getStatusColor(status)}>
+                              <span className={getStatusStyles(status).text}>
                                 {status.charAt(0).toUpperCase() + status.slice(1)}
                               </span>
                               <span>•</span>

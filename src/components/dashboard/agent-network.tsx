@@ -16,7 +16,7 @@ import {
 import '@xyflow/react/dist/style.css'
 
 import { Agent, Session } from '@/types'
-import { sessionToAgent, generateNodePosition } from '@/lib/utils'
+import { sessionToAgent, generateNodePosition, getStatusStyles, getSessionTypeIcon } from '@/lib/utils'
 
 interface AgentNetworkProps {
   agents: Agent[]
@@ -26,26 +26,8 @@ interface AgentNetworkProps {
 // Custom node component for agents
 function AgentNode({ data }: { data: any }) {
   const { agent, status } = data
+  const styles = getStatusStyles(status)
   
-  const getStatusColor = () => {
-    switch (status) {
-      case 'active': return 'border-green-500 bg-green-500/20'
-      case 'idle': return 'border-yellow-500 bg-yellow-500/20'
-      case 'error': return 'border-red-500 bg-red-500/20'
-      default: return 'border-gray-500 bg-gray-500/20'
-    }
-  }
-
-  const getTypeIcon = () => {
-    switch (agent.type) {
-      case 'main': return '👑'
-      case 'subagent': return '🤖'
-      case 'cron': return '⏰'
-      case 'group': return '👥'
-      default: return '📄'
-    }
-  }
-
   const getRoleBadge = () => {
     switch (agent.type) {
       case 'main': 
@@ -63,10 +45,10 @@ function AgentNode({ data }: { data: any }) {
   const isWorking = status === 'active'
 
   return (
-    <div className={`px-3 py-3 shadow-lg rounded-lg border-2 ${getStatusColor()} bg-background min-w-[140px]`}>
+    <div className={`px-3 py-3 shadow-lg rounded-lg border-2 ${styles.border} ${styles.bg} bg-background min-w-[140px]`}>
       <div className="flex items-start justify-between">
         <span className={`text-lg ${isWorking ? 'working-indicator' : ''}`}>
-          {getTypeIcon()}
+          {getSessionTypeIcon(agent.session?.key || agent.id)}
         </span>
         {isWorking && (
           <span className="px-1.5 py-0.5 text-xs font-bold bg-green-500/20 text-green-400 border border-green-500/30 rounded-full animate-pulse">

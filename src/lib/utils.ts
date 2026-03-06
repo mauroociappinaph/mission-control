@@ -28,35 +28,74 @@ export function formatAge(ageStr: string): string {
 }
 
 export function parseTokenUsage(tokens: string): { used: number; total: number; percentage: number } {
-  // Parse token strings like "28k/35k (80%)"
-  const match = tokens.match(/(\d+)k?\/(\d+)k?\s*\((\d+)%\)/)
+  // Parse token strings like "49k/35k (139%)" or "15k/35k (43%)"
+  const match = tokens.match(/(\d+(?:\.\d+)?)(k|m)?\/(\d+(?:\.\d+)?)(k|m)?\s*\((\d+(?:\.\d+)?)%\)/)
   if (!match) return { used: 0, total: 0, percentage: 0 }
-  
-  const used = parseInt(match[1]) * (match[1].includes('k') ? 1000 : 1)
-  const total = parseInt(match[2]) * (match[2].includes('k') ? 1000 : 1)
-  const percentage = parseInt(match[3])
-  
+
+  const used = parseFloat(match[1]) * (match[2] === 'k' ? 1000 : match[2] === 'm' ? 1000000 : 1)
+  const total = parseFloat(match[3]) * (match[4] === 'k' ? 1000 : match[4] === 'm' ? 1000000 : 1)
+  const percentage = parseFloat(match[5])
+
   return { used, total, percentage }
 }
 
-export function getStatusColor(status: AgentStatus['status']): string {
-  switch (status) {
-    case 'active': return 'text-green-500'
-    case 'idle': return 'text-yellow-500'
-    case 'error': return 'text-red-500'
-    case 'offline': return 'text-gray-500'
-    default: return 'text-gray-500'
+export function getStatusStyles(status?: string): { text: string; bg: string; border: string; dot: string } {
+  const s = status?.toLowerCase() || 'unknown'
+  
+  switch (s) {
+    case 'active':
+    case 'success':
+    case 'online':
+      return { 
+        text: 'text-green-400', 
+        bg: 'bg-green-500/20', 
+        border: 'border-green-500/30',
+        dot: 'bg-green-500'
+      }
+    case 'warning':
+    case 'pending':
+      return { 
+        text: 'text-yellow-400', 
+        bg: 'bg-yellow-500/20', 
+        border: 'border-yellow-500/30',
+        dot: 'bg-yellow-500'
+      }
+    case 'critical':
+    case 'error':
+    case 'failed':
+      return { 
+        text: 'text-red-400', 
+        bg: 'bg-red-500/20', 
+        border: 'border-red-500/30',
+        dot: 'bg-red-500'
+      }
+    case 'running':
+    case 'processing':
+      return { 
+        text: 'text-blue-400', 
+        bg: 'bg-blue-500/20', 
+        border: 'border-blue-500/30',
+        dot: 'bg-blue-500'
+      }
+    case 'idle':
+    case 'offline':
+    default:
+      return { 
+        text: 'text-muted-foreground', 
+        bg: 'bg-gray-500/20', 
+        border: 'border-gray-500/30',
+        dot: 'bg-gray-500'
+      }
   }
 }
 
-export function getStatusBadgeColor(status: AgentStatus['status']): string {
-  switch (status) {
-    case 'active': return 'bg-green-500/20 text-green-400 border-green-500/30'
-    case 'idle': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-    case 'error': return 'bg-red-500/20 text-red-400 border-red-500/30'
-    case 'offline': return 'bg-gray-500/20 text-gray-400 border-gray-500/30'
-    default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30'
-  }
+export function getStatusColor(status: string): string {
+  return getStatusStyles(status).text
+}
+
+export function getStatusBadgeColor(status: string): string {
+  const styles = getStatusStyles(status)
+  return `${styles.bg} ${styles.text} ${styles.border}`
 }
 
 /** Normalize model field — OpenClaw 2026.3.x may send {primary: "model-name"} instead of a string */
@@ -64,6 +103,22 @@ export function normalizeModel(model: unknown): string {
   if (typeof model === 'string') return model
   if (model && typeof model === 'object' && 'primary' in model) return String((model as any).primary)
   return ''
+}
+
+export function getSessionTypeIcon(sessionKey: string): string {
+  if (sessionKey.includes(':main:main')) return '👑' // Main session
+  if (sessionKey.includes(':subagent:')) return '🤖' // Sub-agent
+  if (sessionKey.includes(':cron:')) return '⏰' // Cron job
+  if (sessionKey.includes(':group:')) return '👥' // Group session
+  return '💬' // Default
+}
+
+export function getSessionType(sessionKey: string): string {
+  if (sessionKey.includes(':main:main')) return 'Main'
+  if (sessionKey.includes(':subagent:')) return 'Sub-agent'
+  if (sessionKey.includes(':cron:')) return 'Cron'
+  if (sessionKey.includes(':group:')) return 'Group'
+  return 'Unknown'
 }
 
 export function sessionToAgent(session: Session): Agent {

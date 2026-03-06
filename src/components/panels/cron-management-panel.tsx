@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useMissionControl, CronJob } from '@/store'
 import { buildDayKey, getCronOccurrences } from '@/lib/cron-occurrences'
+import { getStatusStyles } from '@/lib/utils'
 
 interface NewJobForm {
   name: string
@@ -252,24 +253,6 @@ export function CronManagementPanel() {
   const handleJobSelect = (job: CronJob) => {
     setSelectedJob(job)
     loadJobLogs(job.name)
-  }
-
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case 'success': return 'text-green-400'
-      case 'error': return 'text-red-400'
-      case 'running': return 'text-blue-400'
-      default: return 'text-muted-foreground'
-    }
-  }
-
-  const getStatusBg = (status?: string) => {
-    switch (status) {
-      case 'success': return 'bg-green-500/20'
-      case 'error': return 'bg-red-500/20'
-      case 'running': return 'bg-blue-500/20'
-      default: return 'bg-gray-500/20'
-    }
   }
 
   const predefinedSchedules = [
@@ -677,7 +660,7 @@ export function CronManagementPanel() {
                         </span>
 
                         {job.lastStatus && (
-                          <span className={`px-2 py-1 text-xs rounded-full ${getStatusBg(job.lastStatus)} ${getStatusColor(job.lastStatus)}`}>
+                          <span className={`px-2 py-1 text-xs rounded-full ${getStatusStyles(job.lastStatus).bg} ${getStatusStyles(job.lastStatus).text}`}>
                             {job.lastStatus}
                           </span>
                         )}
